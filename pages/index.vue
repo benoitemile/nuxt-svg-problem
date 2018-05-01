@@ -1,24 +1,68 @@
 <template>
   <div>
-    <svg class="header-bg-svg" viewbox="0 0 1680 217" height="217" width="100%" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-      <path d="M0 171V0h1680v171S554.21 222.169 256.791 216.148C79.484 212.558 0 171 0 171z" fill-opacity=".8" fill="#18D060"></path>
-      <path d="M0 161V0h1680v161S554.21 195.169 256.791 189.148C79.484 185.558 0 161 0 161z" fill="#FFF"></path>
-    </svg>
-    <h1>Home</h1>
-    <nuxt-link to="/about">Nuxt-link About page</nuxt-link>
-    <br>
-    <a href="/about">Normal link About page</a>
+    <component :is="component"/>
   </div>
 </template>
 
 <script>
+// middleware/isMobile.js
+import MobileDetect from 'mobile-detect';
+const mobile = () => import('~/components/pages/home/mobile.vue');
+const desktop = () => import('~/components/pages/home/desktop.vue');
+
+export default {
+  middleware: 'ismobile',
+  data() {
+    return {
+      isMobile: null,
+      component() {}, // The result from asyncData will be merged with data
+    }
+  },
+  async asyncData(context) {
+    return {
+      isMobile: context.isMobile,
+      component: context.isMobile ? mobile : desktop,
+    }
+  },
+  layout(context) {
+    console.log('layout');
+    const userAgent = process.server ? context.req.headers['user-agent'] : window.navigator.userAgent;
+    const detect = new MobileDetect(userAgent);
+    let isMobile = detect.mobile();
+    return isMobile ? 'mobile' : 'desktop'; // switching between layouts/mobile and layouts/desktop
+  },
+  methods: {
+    handleWindowResize() {
+      this.component =  this.checkSize() ? mobile : desktop;
+    },
+    checkSize() {
+      if (!window) {
+        return false;
+      }
+      let isMobile;
+      if (window.screen.availWidth < 768) {
+        isMobile = true;
+      } else {
+        isMobile = false;
+      }
+      return isMobile;
+    },
+  },
+  created () {
+    if (process.client) {
+      window.addEventListener('resize', this.handleWindowResize);
+    }
+  },
+  destroyed () {
+    if (process.client) {
+      window.removeEventListener('resize', this.handleWindowResize);
+    }
+  }
+}
 </script>
 
 <style>
 body {
-  background: black;
-}
-a, h1 {
-  color: white;
+  font-size: 100px;
 }
 </style>

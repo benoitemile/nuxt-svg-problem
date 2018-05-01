@@ -1,6 +1,7 @@
 {
   "name": "nuxt-svg-problem",
   "dependencies": {
+    "mobile-detect": "^1.4.1",
     "nuxt": "^1.4.0"
   },
   "scripts": {
